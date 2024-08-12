@@ -18,89 +18,43 @@ return {
 		"neovim/nvim-lspconfig",
 		config = function()
 			local lspconfig = require("lspconfig")
-			lspconfig.lua_ls.setup({
-				on_attach = function(client, bufnr)
-					local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
-					local opts = { noremap = true, silent = true }
 
-					-- Keymaps for LSP
-					buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
-					buf_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
-					buf_set_keymap("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
-				end,
-			})
-			lspconfig.clangd.setup({
-				on_attach = function(client, bufnr)
-					local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
-					local opts = { noremap = true, silent = true }
+			-- General on_attach function
+			local on_attach = function(client, bufnr)
+				local function buf_set_keymap(...)
+					vim.api.nvim_buf_set_keymap(bufnr, ...)
+				end
+				local opts = { noremap = true, silent = true }
 
-					-- Keymaps for LSP
-					buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
-					buf_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
-					buf_set_keymap("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
-				end,
-			})
-			lspconfig.pyright.setup({
-				on_attach = function(client, bufnr)
-					local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
-					local opts = { noremap = true, silent = true }
+				-- Keymaps for LSP
+				buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
+				buf_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
+				buf_set_keymap("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
 
-					-- Keymaps for LSP
-					buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
-					buf_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
-					buf_set_keymap("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
-				end,
-			})
-			lspconfig.rust_analyzer.setup({
-				on_attach = function(client, bufnr)
-					local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
-					local opts = { noremap = true, silent = true }
-
-					-- Keymaps for LSP
-					buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
-					buf_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
-					buf_set_keymap("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
-				end,
-			})
-			lspconfig.tsserver.setup({
-				on_attach = function(client, bufnr)
-					local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
-					local opts = { noremap = true, silent = true }
-
-					-- Keymaps for LSP
-					buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
-					buf_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
-					buf_set_keymap("n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
-				end,
-			})
-		end,
-	},
-	{
-		"MysticalDevil/inlay-hints.nvim",
-		after = "neovim/nvim-lspconfig", -- Ensure this is loaded after nvim-lspconfig
-		config = function()
-			require("inlay-hints").setup({
-				autocmd = { enable = true },  -- Enable the inlay hints on LspAttach event
-				commands = { enable = true }, -- Enable InlayHints commands
-			})
-
-			-- Function to enable inlay hints for specific LSP servers
-			local function enable_inlay_hints(client)
+				-- Enable inlay hints if supported
 				if client.supports_method("textDocument/inlayHint") then
-					require("inlay-hints").on_attach(client)
+					require("inlay-hints").on_attach(client, bufnr)
 				end
 			end
 
-			-- Set up inlay hints for specific servers
-			local lspconfig = require("lspconfig")
-			for _, server in ipairs({ "clangd", "pyright", "rust_analyzer", "tsserver" }) do
+			-- LSP server configurations
+			local servers = { "lua_ls", "clangd", "pyright", "rust_analyzer", "tsserver" }
+			for _, server in ipairs(servers) do
 				lspconfig[server].setup({
-					on_attach = function(client, bufnr)
-						enable_inlay_hints(client)
-					end,
+					on_attach = on_attach,
+					-- other settings can go here
 				})
 			end
 		end,
 	},
+	{
+		"MysticalDevil/inlay-hints.nvim",
+		after = "neovim/nvim-lspconfig",
+		config = function()
+			require("inlay-hints").setup({
+				autocmd = { enable = true },
+				commands = { enable = true },
+			})
+		end,
+	},
 }
-
