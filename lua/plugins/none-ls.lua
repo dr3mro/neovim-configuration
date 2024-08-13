@@ -5,7 +5,15 @@ return {
 
     null_ls.setup({
       sources = {
-        null_ls.builtins.formatting.stylua,
+        -- Formatting
+        -- luafmt
+        require("null-ls").builtins.formatting.stylua,
+        require("null-ls").builtins.formatting.clang_format.with({
+          extra_args = { "--style=file" },
+          filetypes = { "c", "cpp", "objc", "objcpp" },
+        }),
+        -- Ensures the .clang-format file is used
+
       },
     })
 

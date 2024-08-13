@@ -94,6 +94,41 @@ return {
     dap.listeners.before.event_terminated['dapui_config'] = dapui.close
     dap.listeners.before.event_exited['dapui_config'] = dapui.close
 
+    -- Codelldb setup for C++
+    dap.adapters.codelldb = {
+      type = 'server',
+      port = "${port}",
+      executable = {
+        -- Path to the codelldb executable
+        command = 'codelldb',
+        args = { "--port", "${port}" },
+      }
+    }
+
+    dap.configurations.cpp = {
+      {
+        name = "codelldb debug",
+        type = "codelldb",
+        request = "launch",
+        program = function()
+          -- Build project with CMake before launching the program
+          local build_cmd = "cmake --build build --target server --config Debug"
+          os.execute(build_cmd)
+          return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/build/Debug/server', 'file')
+        end,
+        cwd = '${workspaceFolder}',
+        stopOnEntry = false,
+        args = {},
+        preLaunchTask = function()
+          -- Optionally, you can define the build command here as well
+          -- os.execute("cmake --build build --target setup --config Debug")
+        end,
+      },
+    }
+
+    -- Make codelldb the default for C files as well
+    dap.configurations.c = dap.configurations.cpp
+
     -- Install golang specific config
     require('dap-go').setup {
       delve = {
